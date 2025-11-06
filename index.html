@@ -3,42 +3,64 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FreshBite Delivery - Fast, Fresh & Delivered to Your Doorstep</title>
+    <title>BMS Kitchen - Fast, Fresh & Delivered to Your Doorstep</title>
 
-    <meta name="description" content="FreshBite Delivery offers fast food delivery service with fresh burgers, pizzas, drinks, and desserts. Order now and get delicious meals delivered to your doorstep!" />
-    <meta name="author" content="FreshBite Delivery" />
+    <meta name="description" content="BMS Kitchen offers fast food delivery service with fresh burgers, pizzas, drinks, and desserts. Order now and get delicious meals delivered to your doorstep!" />
+    <meta name="author" content="BMS Kitchen" />
     <meta name="keywords" content="food delivery, restaurant, burgers, pizzas, fast food, home delivery, online ordering, fresh food, meal delivery" />
 
-    <meta property="og:title" content="FreshBite Delivery - Fast, Fresh & Delivered to Your Doorstep" />
-    <meta property="og:description" content="FreshBite Delivery offers fast food delivery service with fresh burgers, pizzas, drinks, and desserts. Order now and get delicious meals delivered to your doorstep!" />
+    <meta property="og:title" content="BMS Kitchen - Fast, Fresh & Delivered to Your Doorstep" />
+    <meta property="og:description" content="BMS Kitchen offers fast food delivery service with fresh burgers, pizzas, drinks, and desserts. Order now and get delicious meals delivered to your doorstep!" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=630&fit=crop" />
-    <meta property="og:image:alt" content="Delicious food from FreshBite Delivery" />
+    <meta property="og:image:alt" content="Delicious food from BMS Kitchen" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="FreshBite Delivery - Fast, Fresh & Delivered to Your Doorstep" />
-    <meta name="twitter:description" content="FreshBite Delivery offers fast food delivery service with fresh burgers, pizzas, drinks, and desserts. Order now and get delicious meals delivered to your doorstep!" />
-    <meta name="twitter:site" content="@freshbitedelivery" />
+    <meta name="twitter:title" content="BMS Kitchen - Fast, Fresh & Delivered to Your Doorstep" />
+    <meta name="twitter:description" content="BMS Kitchen offers fast food delivery service with fresh burgers, pizzas, drinks, and desserts. Order now and get delicious meals delivered to your doorstep!" />
+    <meta name="twitter:site" content="@bmskitchen" />
     <meta name="twitter:image" content="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1200&h=630&fit=crop" />
 
     <link rel="icon" type="image/png" sizes="16x16" href="https://i.ibb.co/HLfD5wgf/dualite-favicon.png" />
-    <link rel="canonical" href="https://alpha.dualite.dev" />
+    <link rel="canonical" href="https://bms-kitchen.netlify.app" />
 
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "Restaurant",
-        "name": "FreshBite Delivery",
-        "url": "https://alpha.dualite.dev",
-        "description": "FreshBite Delivery offers fast food delivery service with fresh burgers, pizzas, drinks, and desserts.",
+        "name": "BMS Kitchen",
+        "url": "https://bms-kitchen.netlify.app",
+        "description": "BMS Kitchen offers fast food delivery service with fresh burgers, pizzas, drinks, and desserts.",
         "servesCuisine": ["Fast Food", "Burgers", "Pizza", "Desserts"],
         "priceRange": "$$",
         "publisher": {
           "@type": "Organization",
-          "name": "FreshBite Delivery"
+          "name": "BMS Kitchen"
         }
       }
     </script>
+    
+    <style>
+      /* Real-time notification styles */
+      .real-time-notification {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: #fff;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-left: 4px solid #ff6b35;
+        z-index: 10000;
+        max-width: 300px;
+        animation: slideInRight 0.3s ease;
+      }
+      
+      @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
