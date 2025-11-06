@@ -24,6 +24,10 @@
     <link rel="icon" type="image/png" sizes="16x16" href="https://i.ibb.co/HLfD5wgf/dualite-favicon.png" />
     <link rel="canonical" href="https://bms-kitchen.netlify.app" />
 
+    <!-- Preload CSS for better performance -->
+    <link rel="preload" href="./style.css" as="style">
+    <link rel="stylesheet" href="./style.css">
+
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -41,6 +45,13 @@
     </script>
     
     <style>
+      /* Basic fallback styles in case CSS fails to load */
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      }
+      
       /* Real-time notification styles */
       .real-time-notification {
         position: fixed;
