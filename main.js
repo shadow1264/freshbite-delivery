@@ -12,10 +12,44 @@ const state = {
   menuItems: [],
   orders: [],
   adminTab: 'menu',
-  whatsappNumber: '8801XXXXXXXXX',
+  whatsappNumber: '8801316006363',
   users: [],
   currentUser: null,
-  authForm: 'login', // 'login' or 'register'
+  authForm: 'login',
+  websiteSettings: {
+    name: 'BMS Kitchen',
+    logo: '🍔',
+    tagline: 'Fast, Fresh & Delivered to Your Doorstep',
+    deliveryFee: 50
+  },
+  onlineUsers: [],
+  notifications: []
+};
+
+// Real-time service for live updates
+const RealTimeService = {
+  listeners: new Map(),
+  
+  subscribe(event, callback) {
+    if (!this.listeners.has(event)) {
+      this.listeners.set(event, new Set());
+    }
+    this.listeners.get(event).add(callback);
+  },
+  
+  unsubscribe(event, callback) {
+    const callbacks = this.listeners.get(event);
+    if (callbacks) {
+      callbacks.delete(callback);
+    }
+  },
+  
+  emit(event, data) {
+    const callbacks = this.listeners.get(event);
+    if (callbacks) {
+      callbacks.forEach(callback => callback(data));
+    }
+  }
 };
 
 function generateMockData() {
@@ -53,7 +87,7 @@ function generateMockData() {
 function getImageByCategory(category, index) {
   const images = {
     Burgers: ['https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=500&h=400&fit=crop'],
-    Pizzas: ['https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1595854341625-f33ee10dbf94?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=500&h=400&fit=crop'],
+    Pizzas: ['https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=500&h=400&fit=crop', 'https://images.unsplash.com/phone-1595854341625-f33ee10dbf94?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=500&h=400&fit=crop'],
     Drinks: ['https://images.unsplash.com/photo-1546173159-315724a31696?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1437418747212-8d9709afab22?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1560512823-829485b8bf24?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1623065422902-30a2d299bbe4?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1604881991720-f91add269bed?w=500&h=400&fit=crop'],
     Desserts: ['https://images.unsplash.com/photo-1551024506-0bccd828d307?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1557925923-cd4648e211a0?w=500&h=400&fit=crop', 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=500&h=400&fit=crop']
   };
@@ -61,48 +95,110 @@ function getImageByCategory(category, index) {
 }
 
 // ====================================================================================
-// 2. AUTHENTICATION SERVICE
+// 2. AUTHENTICATION SERVICE WITH REAL-TIME FEATURES
 // ====================================================================================
 
 const auth = {
   init() {
+    // Add admin user
     state.users.push({
       id: 'admin-user',
-      name: 'Shadow Admin',
-      email: 'sh4d0wadmin@email.com',
+      name: 'BMS Admin',
+      email: 'admin@bmskitchen.com',
       phone: '01234567890',
-      password: 'sh4d0w1264',
+      password: 'admin123',
       isAdmin: true,
+      isOnline: true,
+      lastSeen: new Date()
     });
+    
+    // Subscribe to real-time events
+    RealTimeService.subscribe('userOnline', this.handleUserOnline.bind(this));
+    RealTimeService.subscribe('userOffline', this.handleUserOffline.bind(this));
   },
+  
   register(name, email, phone, password) {
     if (state.users.find(u => u.email === email)) {
       showAlert('User with this email already exists.', 'error');
       return false;
     }
-    const newUser = { id: faker.string.uuid(), name, email, phone, password, isAdmin: false };
+    const newUser = { 
+      id: faker.string.uuid(), 
+      name, 
+      email, 
+      phone, 
+      password, 
+      isAdmin: false,
+      isOnline: true,
+      lastSeen: new Date()
+    };
     state.users.push(newUser);
     this.login(email, password);
+    
+    // Notify admin about new registration
+    if (state.currentUser?.isAdmin) {
+      RealTimeService.emit('newUser', newUser);
+    }
+    
     showAlert('Registration successful! You are now logged in.', 'success');
     return true;
   },
+  
   login(email, password) {
     const user = state.users.find(u => u.email === email && u.password === password);
     if (user) {
+      user.isOnline = true;
+      user.lastSeen = new Date();
       state.currentUser = user;
+      
+      // Notify real-time system
+      RealTimeService.emit('userOnline', user);
+      
       navigateTo('home');
       return true;
     }
     showAlert('Invalid email or password.', 'error');
     return false;
   },
+  
   logout() {
+    if (state.currentUser) {
+      state.currentUser.isOnline = false;
+      state.currentUser.lastSeen = new Date();
+      RealTimeService.emit('userOffline', state.currentUser);
+    }
     state.currentUser = null;
     navigateTo('home');
   },
+  
+  handleUserOnline(user) {
+    const existingUser = state.users.find(u => u.id === user.id);
+    if (existingUser) {
+      existingUser.isOnline = true;
+      existingUser.lastSeen = new Date();
+    }
+    updateOnlineUsers();
+  },
+  
+  handleUserOffline(user) {
+    const existingUser = state.users.find(u => u.id === user.id);
+    if (existingUser) {
+      existingUser.isOnline = false;
+      existingUser.lastSeen = new Date();
+    }
+    updateOnlineUsers();
+  },
+  
   getCurrentUser: () => state.currentUser,
   isAdmin: () => state.currentUser?.isAdmin || false,
 };
+
+function updateOnlineUsers() {
+  state.onlineUsers = state.users.filter(user => user.isOnline);
+  if (state.currentPage === 'admin' && state.adminTab === 'users') {
+    renderApp();
+  }
+}
 
 // ====================================================================================
 // 3. ROUTER & NAVIGATION
@@ -163,8 +259,8 @@ function renderNavbar() {
     <nav class="navbar">
       <div class="container">
         <div class="logo" onclick="navigateTo('home')">
-          <div class="logo-icon">🍔</div>
-          <span>FreshBite</span>
+          <div class="logo-icon">${state.websiteSettings.logo}</div>
+          <span>${state.websiteSettings.name}</span>
         </div>
         <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
         <nav id="navMenu">
@@ -175,7 +271,7 @@ function renderNavbar() {
               </li>
             `).join('')}
             ${user ? `
-              <li class="user-info">Hi, ${user.name.split(' ')[0]}</li>
+              <li class="user-info">Hi, ${user.name.split(' ')[0]} ${user.isOnline ? '<span class="online-dot"></span>' : ''}</li>
               <li onclick="auth.logout()">Logout</li>
             ` : `
               <li class="${state.currentPage === 'login' ? 'active' : ''}" onclick="navigateTo('login')">Login</li>
@@ -195,8 +291,8 @@ function renderFooter() {
       <div class="container">
         <div class="footer-content">
           <div class="footer-section">
-            <h3>FreshBite Delivery</h3>
-            <p>Fast, Fresh & Delivered to Your Doorstep</p>
+            <h3>${state.websiteSettings.name}</h3>
+            <p>${state.websiteSettings.tagline}</p>
             <div class="social-icons">
               <a href="#" class="social-icon">📘</a> <a href="#" class="social-icon">📷</a> <a href="#" class="social-icon">🐦</a>
               <a href="https://wa.me/${state.whatsappNumber}" class="social-icon" target="_blank">📱</a>
@@ -212,7 +308,7 @@ function renderFooter() {
           <div class="footer-section">
             <h3>Contact Info</h3>
             <ul>
-              <li>📞 +${state.whatsappNumber}</li> <li>📧 info@freshbite.com</li> <li>📍 Dhaka, Bangladesh</li>
+              <li>📞 +${state.whatsappNumber}</li> <li>📧 info@bmskitchen.com</li> <li>📍 Dhaka, Bangladesh</li>
             </ul>
           </div>
           <div class="footer-section">
@@ -223,7 +319,7 @@ function renderFooter() {
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; ${new Date().getFullYear()} FreshBite Delivery. All rights reserved.</p>
+          <p>&copy; ${new Date().getFullYear()} ${state.websiteSettings.name}. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -266,21 +362,21 @@ function renderMenuItem(item) {
 }
 
 // ====================================================================================
-// 5. PAGE RENDERERS
+// 5. PAGE RENDERERS WITH ENHANCED ADMIN FEATURES
 // ====================================================================================
 
 function renderHomePage() {
   return `
     <section class="hero">
       <div class="container">
-        <h1>FreshBite Delivery</h1>
-        <p class="tagline">Fast, Fresh & Delivered to Your Doorstep</p>
+        <h1>${state.websiteSettings.name}</h1>
+        <p class="tagline">${state.websiteSettings.tagline}</p>
         <button class="btn" onclick="navigateTo('menu')">Order Now</button>
       </div>
     </section>
     <section class="features">
       <div class="container">
-        <h2>Why Choose FreshBite?</h2>
+        <h2>Why Choose ${state.websiteSettings.name}?</h2>
         <div class="features-grid">
           <div class="feature-card"><div class="feature-icon">🚀</div><h3>Fast Delivery</h3><p>Get your food delivered within 30 minutes</p></div>
           <div class="feature-card"><div class="feature-icon">🍽️</div><h3>Fresh Food</h3><p>Made with the freshest ingredients</p></div>
@@ -322,7 +418,7 @@ function renderMenuPage() {
 
 function renderCartPage() {
   const total = state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const deliveryFee = 50;
+  const deliveryFee = state.websiteSettings.deliveryFee;
   const grandTotal = total + deliveryFee;
 
   if (state.cart.length === 0) {
@@ -397,7 +493,7 @@ function renderContactPage() {
         <div class="contact-grid">
           <div class="contact-card"><div class="contact-icon">📱</div><h3>WhatsApp</h3><p>Chat with us instantly</p><a href="https://wa.me/${state.whatsappNumber}" target="_blank" class="btn btn-whatsapp mt-1">Open WhatsApp</a></div>
           <div class="contact-card"><div class="contact-icon">📞</div><h3>Phone</h3><p>Call us for quick queries</p><a href="tel:+${state.whatsappNumber}">+${state.whatsappNumber}</a></div>
-          <div class="contact-card"><div class="contact-icon">📧</div><h3>Email</h3><p>Send us an email</p><a href="mailto:info@freshbite.com">info@freshbite.com</a></div>
+          <div class="contact-card"><div class="contact-icon">📧</div><h3>Email</h3><p>Send us an email</p><a href="mailto:info@bmskitchen.com">info@bmskitchen.com</a></div>
         </div>
         <div class="map-container mt-2"><iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3652.2396847873!2d90.39167831543534!3d23.75037999414712!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3755b8b7a55cd36f%3A0xfcc5b021faff43ea!2sDhaka%2C%20Bangladesh!5e0!3m2!1sen!2sus!4v1234567890123!5m2!1sen!2sus" allowfullscreen="" loading="lazy"></iframe></div>
       </div>
@@ -436,7 +532,9 @@ function renderAdminPage() {
         <div class="admin-tabs">
           <button class="admin-tab ${state.adminTab === 'menu' ? 'active' : ''}" onclick="switchAdminTab('menu')">Menu Items</button>
           <button class="admin-tab ${state.adminTab === 'orders' ? 'active' : ''}" onclick="switchAdminTab('orders')">Orders</button>
-          <button class="admin-tab ${state.adminTab === 'settings' ? 'active' : ''}" onclick="switchAdminTab('settings')">Settings</button>
+          <button class="admin-tab ${state.adminTab === 'users' ? 'active' : ''}" onclick="switchAdminTab('users')">Users</button>
+          <button class="admin-tab ${state.adminTab === 'notifications' ? 'active' : ''}" onclick="switchAdminTab('notifications')">Notifications</button>
+          <button class="admin-tab ${state.adminTab === 'settings' ? 'active' : ''}" onclick="switchAdminTab('settings')">Website Settings</button>
         </div>
         <div class="admin-content">${renderAdminContent()}</div>
       </div>
@@ -448,6 +546,8 @@ function renderAdminContent() {
   switch (state.adminTab) {
     case 'menu': return renderAdminMenuTab();
     case 'orders': return renderAdminOrdersTab();
+    case 'users': return renderAdminUsersTab();
+    case 'notifications': return renderAdminNotificationsTab();
     case 'settings': return renderAdminSettingsTab();
     default: return renderAdminMenuTab();
   }
@@ -508,18 +608,167 @@ function renderAdminOrdersTab() {
   `;
 }
 
+function renderAdminUsersTab() {
+  const onlineUsers = state.users.filter(user => user.isOnline);
+  return `
+    <div>
+      <div class="users-stats">
+        <div class="stat-card">
+          <h4>Total Users</h4>
+          <div class="stat-number">${state.users.length}</div>
+        </div>
+        <div class="stat-card">
+          <h4>Online Now</h4>
+          <div class="stat-number online">${onlineUsers.length}</div>
+        </div>
+      </div>
+      
+      <div class="online-users-section mt-2">
+        <h4>Currently Online (${onlineUsers.length})</h4>
+        ${onlineUsers.length === 0 ? 
+          '<p>No users online at the moment</p>' : 
+          onlineUsers.map(user => `
+            <div class="user-card online">
+              <div class="user-avatar">${user.name.charAt(0)}</div>
+              <div class="user-info">
+                <strong>${user.name}</strong>
+                <span>${user.email}</span>
+                <small>Online now</small>
+              </div>
+              <span class="online-indicator"></span>
+            </div>
+          `).join('')
+        }
+      </div>
+      
+      <div class="all-users-section mt-2">
+        <h4>All Registered Users</h4>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Status</th>
+              <th>Type</th>
+              <th>Last Seen</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${state.users.map(user => `
+              <tr>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <div class="user-avatar-small">${user.name.charAt(0)}</div>
+                    ${user.name}
+                  </div>
+                </td>
+                <td>${user.email}</td>
+                <td>${user.phone}</td>
+                <td>
+                  <span class="status-indicator ${user.isOnline ? 'online' : 'offline'}">
+                    ${user.isOnline ? 'Online' : 'Offline'}
+                  </span>
+                </td>
+                <td>${user.isAdmin ? '<span style="color: var(--primary-color); font-weight: bold;">Admin</span>' : 'User'}</td>
+                <td>${user.lastSeen.toLocaleTimeString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function renderAdminNotificationsTab() {
+  return `
+    <div>
+      <h3>Push Notifications</h3>
+      <p>Send real-time notifications to your users</p>
+      
+      <div class="notification-form">
+        <form onsubmit="sendPushNotification(event)">
+          <div class="form-group">
+            <label for="notificationTitle">Notification Title</label>
+            <input type="text" id="notificationTitle" required placeholder="Enter notification title">
+          </div>
+          <div class="form-group">
+            <label for="notificationMessage">Message</label>
+            <textarea id="notificationMessage" required placeholder="Enter your message" rows="4"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="notificationAudience">Send To</label>
+            <select id="notificationAudience">
+              <option value="all">All Users</option>
+              <option value="online">Online Users Only</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-whatsapp">Send Notification</button>
+        </form>
+      </div>
+      
+      <div class="notification-history mt-2">
+        <h4>Recent Notifications</h4>
+        ${state.notifications.length === 0 ? 
+          '<p>No notifications sent yet</p>' : 
+          state.notifications.slice(0, 5).map(notif => `
+            <div class="notification-item">
+              <strong>${notif.title}</strong>
+              <p>${notif.message}</p>
+              <small>Sent to: ${notif.audience} • ${notif.timestamp.toLocaleTimeString()}</small>
+            </div>
+          `).join('')
+        }
+      </div>
+    </div>
+  `;
+}
+
 function renderAdminSettingsTab() {
   return `
     <div>
-      <h3>Restaurant Settings</h3>
-      <form id="settingsForm" onsubmit="saveSettings(event)">
-        <div class="form-group"><label for="restaurantName">Restaurant Name</label><input type="text" id="restaurantName" value="FreshBite Delivery"></div>
-        <div class="form-group"><label for="tagline">Tagline</label><input type="text" id="tagline" value="Fast, Fresh & Delivered to Your Doorstep"></div>
-        <div class="form-group"><label for="whatsappNumber">WhatsApp Number</label><input type="tel" id="whatsappNumber" value="${state.whatsappNumber}"></div>
-        <div class="form-group"><label for="deliveryFee">Delivery Fee (Tk)</label><input type="number" id="deliveryFee" value="50.00" step="1"></div>
-        <div class="form-group"><label for="heroImage">Hero Image URL</label><input type="url" id="heroImage" value="https://images.unsplash.com/photo-1504674900247-0877df9cc836"></div>
-        <button type="submit" class="btn mt-2">Save Settings</button>
+      <h3>Website Settings</h3>
+      <p>Customize your restaurant website</p>
+      
+      <form onsubmit="saveWebsiteSettings(event)">
+        <div class="form-group">
+          <label for="websiteName">Restaurant Name</label>
+          <input type="text" id="websiteName" value="${state.websiteSettings.name}" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="websiteLogo">Logo Emoji</label>
+          <input type="text" id="websiteLogo" value="${state.websiteSettings.logo}" placeholder="🍔" maxlength="2">
+          <small>Use a single emoji as your logo</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="websiteTagline">Tagline</label>
+          <input type="text" id="websiteTagline" value="${state.websiteSettings.tagline}" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="whatsappNumber">WhatsApp Number</label>
+          <input type="tel" id="whatsappNumber" value="${state.whatsappNumber}" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="deliveryFee">Delivery Fee (Tk)</label>
+          <input type="number" id="deliveryFee" value="${state.websiteSettings.deliveryFee}" step="1" min="0">
+        </div>
+        
+        <button type="submit" class="btn">Save Settings</button>
       </form>
+      
+      <div class="website-preview mt-2">
+        <h4>Preview</h4>
+        <div style="background: var(--light-gray); padding: 2rem; border-radius: 10px; text-align: center;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">${state.websiteSettings.logo}</div>
+          <h3 style="margin-bottom: 0.5rem;">${state.websiteSettings.name}</h3>
+          <p style="color: var(--gray-color);">${state.websiteSettings.tagline}</p>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -537,6 +786,13 @@ function setupEventListeners() {
       parentLabel.querySelector('input[type="radio"]').checked = true;
     }
   });
+
+  // Real-time user status updates
+  setInterval(() => {
+    if (state.currentUser) {
+      state.currentUser.lastSeen = new Date();
+    }
+  }, 30000);
 }
 
 window.toggleMobileMenu = () => document.getElementById('navMenu').classList.toggle('active');
@@ -599,7 +855,7 @@ window.handleCheckout = (event) => {
     customer: { name: user.name, phone: user.phone },
     address: document.getElementById('customerAddress').value,
     items: [...state.cart],
-    total: state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 50,
+    total: state.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + state.websiteSettings.deliveryFee,
     paymentMethod: document.querySelector('input[name="payment"]:checked').value,
     status: 'Pending',
     date: new Date().toLocaleDateString()
@@ -612,6 +868,66 @@ window.handleCheckout = (event) => {
 
 window.switchAdminTab = (tab) => { state.adminTab = tab; renderApp(); };
 
+// Enhanced Admin Functions
+window.sendPushNotification = (event) => {
+  event.preventDefault();
+  const title = document.getElementById('notificationTitle').value;
+  const message = document.getElementById('notificationMessage').value;
+  const audience = document.getElementById('notificationAudience').value;
+  
+  const notification = {
+    id: faker.string.uuid(),
+    title,
+    message,
+    audience,
+    timestamp: new Date()
+  };
+  
+  state.notifications.unshift(notification);
+  
+  // Show real-time notification to users
+  if (audience === 'all' || audience === 'online') {
+    RealTimeService.emit('pushNotification', notification);
+  }
+  
+  showAlert('Notification sent successfully!', 'success');
+  event.target.reset();
+};
+
+window.saveWebsiteSettings = (event) => {
+  event.preventDefault();
+  state.websiteSettings.name = document.getElementById('websiteName').value;
+  state.websiteSettings.logo = document.getElementById('websiteLogo').value;
+  state.websiteSettings.tagline = document.getElementById('websiteTagline').value;
+  state.whatsappNumber = document.getElementById('whatsappNumber').value;
+  state.websiteSettings.deliveryFee = parseInt(document.getElementById('deliveryFee').value);
+  
+  showAlert('Website settings updated successfully!', 'success');
+  renderApp();
+};
+
+// Subscribe to real-time notifications
+RealTimeService.subscribe('pushNotification', (notification) => {
+  showRealTimeNotification(notification);
+});
+
+function showRealTimeNotification(notification) {
+  const notificationDiv = document.createElement('div');
+  notificationDiv.className = 'real-time-notification';
+  notificationDiv.innerHTML = `
+    <strong>${notification.title}</strong>
+    <p>${notification.message}</p>
+    <small>${notification.timestamp.toLocaleTimeString()}</small>
+  `;
+  
+  document.body.appendChild(notificationDiv);
+  
+  setTimeout(() => {
+    notificationDiv.remove();
+  }, 5000);
+}
+
+// Existing modal functions (keep all your existing modal functions)
 window.openAddItemModal = () => {
   document.getElementById('modalTitle').textContent = 'Add New Menu Item';
   document.getElementById('modalBody').innerHTML = `
@@ -701,12 +1017,6 @@ window.viewOrderDetails = (orderId) => {
     </div>
   `;
   document.getElementById('modal').classList.add('active');
-};
-
-window.saveSettings = (event) => {
-  event.preventDefault();
-  state.whatsappNumber = document.getElementById('whatsappNumber').value;
-  showAlert('Settings saved successfully!', 'success');
 };
 
 window.previewImage = (event) => {
